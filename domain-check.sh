@@ -1,12 +1,14 @@
 #!/bin/bash
 #检测域名是否过期
-#作者：xuexiaobai@shell.com
-#日期：20200224
-#版本：v0.1
+#原作者：xuexiaobai@shell.com
+#修改：多米诺
+#日期：20230209
+#版本：v0.2
+
 
 #当前日期时间戳，用于和域名的到期时间做比较
 currentTimestamp=`date +%s`
-
+echo -e "开始查询域名有效期\n"
 #检测whois命令是否存在，不存在则安装whois包
 isInstallWhois()
 {
@@ -22,6 +24,8 @@ notify()
     expiredate=`whois $1 |grep 'Registry Expiry Date' |awk '{print $4}' |cut -d 'T' -f 1`
     #上面的$1代表域名，遍历循环出来的。
     #如果e_d的值为空，则过滤关键词'Expiration Time'
+    echo 'domain =' $1
+    echo -e 'date =' $expiredate"\n"
     if [ -z "$expiredate" ]
     then
         expiredate=`whois $1|grep 'Expiration Time' |awk '{print $3}'`
@@ -36,18 +40,13 @@ notify()
     timeAfter=$[$expiredatestamp + $n] #过期时间15d以后的时间戳
     if [ $currentTimestamp -ge $timeBeforce ] && [ $currentTimestamp -lt $expiredatestamp ]
     then
-        curl -X POST \
-            -H 'Content-type: application/json' \
-            --data '{"text":":warning:Domain '$1' will to be expired less then 15d. And domain '$1' expire date is '$expiredate' @xuexiaobai"}' \
-            https://hooks.slack.com/services/*****/xxxxxxx/qqqqqqqqqqqqqqqqqqqqqq
+        curl -X POST "https://api.day.app/*****************" \
+             -d 'title=域名即将到期提醒&body=警告：域名 '$1' 将在15天内到期，到期时间为 '$expiredate'，请及时续费！&group=域名检查&icon=https://bu.dusays.com/2021/12/21/4f20cbfa55e12.png'
     fi
     if [ $currentTimestamp -ge $expiredatestamp ] 
     then
-        curl -X POST \
-            -H 'Content-type: application/json' \
-            --data '{
-                "text":":interrobang:Domain '$1' has been expired. And domain '$1' expire date is '$expiredate' @xuexiaobai"}' \
-            https://hooks.slack.com/services/*****/xxxxxxx/qqqqqqqqqqqqqqqqqqqqqq
+        curl -X POST "https://api.day.app/*****************" \
+             -d 'title=域名已到期提醒&body=警告：域名 '$1' 已到期，到期时间为 '$expiredate'，请考虑及时赎回！&group=域名检查&icon=https://bu.dusays.com/2021/12/21/4f20cbfa55e12.png'
     fi
 }
 
@@ -60,7 +59,8 @@ fi
 
 isInstallWhois
 
-for d in baidu.com google.com
+#下面星号填域名
+for d in *****.*** *****.*** *****.***
 do
   notify $d
 done
